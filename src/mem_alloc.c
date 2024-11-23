@@ -34,7 +34,7 @@ void *memAlloc(size_t size) {
   }
 
   // If no chunk was found
-  if (current) {
+  if (!current) {
     return NULL;
   }
 
@@ -52,9 +52,7 @@ void *memAlloc(size_t size) {
     current->in_use = true;
     current->next = next;
   }
-
-  void *memory_root = (void *)(current + 1);  
-  return memory_root;
+  return (void *)(current + 1);  
 }
 
 void memFree(void *ptr) {
@@ -69,13 +67,10 @@ void memFree(void *ptr) {
 
 int main() {
   intializeHead();
-  char *alpha = memAlloc(26);
-  for (int i = 0; i<26; ++i) {
-    alpha[i] = 'A' + i;
+  char *test;
+  for (int i = 1; i < 34; ++i) {
+    test = memAlloc(i);
+    printf("%p %d\n", test, i);
   }
-  for (int i = 0; i<26; ++i) {
-    printf("%c ", alpha[i]);
-  }
-  printf("%d \n", *(alpha - 8));
   return 0;
 }
