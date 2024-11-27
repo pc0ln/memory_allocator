@@ -3,6 +3,7 @@
 
 #define HEAP_CAP 64000032
 
+// Metadata for memory chunk
 typedef struct Chunk_Data{
   size_t size;
   bool in_use;
@@ -10,23 +11,24 @@ typedef struct Chunk_Data{
   struct Chunk_Data* prev;
 } Chunk_Data;
 
+// Initalization of "heap"
 unsigned char heap[HEAP_CAP] = { 0 };
-Chunk_Data *head_head = NULL;
+Chunk_Data *heap_head = NULL;
 
+//Creating metadata for initial "heap"
 void intializeHead() {
-  //Creating metadata for initial heap
-  head_head = (Chunk_Data *)heap;
-  head_head->size = HEAP_CAP - sizeof(Chunk_Data);
-  head_head->in_use = false;
-  head_head->next = NULL;
-  head_head->prev = NULL;
+  heap_head = (Chunk_Data *)heap;
+  heap_head->size = HEAP_CAP - sizeof(Chunk_Data);
+  heap_head->in_use = false;
+  heap_head->next = NULL;
+  heap_head->prev = NULL;
 }
 
+// Allocate chunk of size
 void *memAlloc(size_t size) {
-  // Allocate chunk of size
+  // creates a current pointer to check chunks
+  Chunk_Data *current = heap_head;
 
-  // cretes a current pointer to check chunks
-  Chunk_Data *current = head_head;
   // Looks for a chunk of big enough size and not in use
   while (current && (current->size < size || current->in_use == true)) {
     current = current->next;
@@ -40,7 +42,7 @@ void *memAlloc(size_t size) {
   // Split current chunk if too big
   if (current->size > size + sizeof(Chunk_Data) + 1) { // Plus 1 too make sure the next chunk has at least one byte
     Chunk_Data *next = (Chunk_Data *)((unsigned char *)current + size + sizeof(Chunk_Data));
-    // Sets up header for other part of chunk
+    // Sets up metadata for latter part of chunk
     next->size = (current->size - size - sizeof(Chunk_Data));
     next->in_use = false;
     next->prev = current;
@@ -51,17 +53,20 @@ void *memAlloc(size_t size) {
     current->in_use = true;
     current->next = next;
   }
+  // Returns pointer to memory root
   return (void *)(current + 1);  
 }
 
+// Takes pointer and sets chunk to free
 void memFree(void *ptr) {
-  // Takes pointer and sets to not in use
+  // Shifts pointer to look at meta data
   Chunk_Data *chunk = (Chunk_Data *)ptr - 1;
   chunk->in_use = false;
 
   // Coalesce free chunks
   int total_size = chunk->size;
   Chunk_Data *test = chunk;
+
   // Check next chunks
   test = chunk->next;
   while (test && test->in_use == false) {
@@ -69,6 +74,7 @@ void memFree(void *ptr) {
     test = test->next; 
   }
   Chunk_Data* next = test;
+
   // Check previous chunks
   test = chunk;
   while (test->prev && test->prev->in_use == false) {
@@ -80,18 +86,19 @@ void memFree(void *ptr) {
   if (next) {
     next->prev = test;
   }
-  
 }
 
+// Print chunks to get metadata
 void printChunks () {
-  // Print chunks to get metadata
-  Chunk_Data *current = head_head;
+  // Loops through list of chunks (linked list)
+  Chunk_Data *current = heap_head;
   while (current) {
     printf("Chunk at:%p size=%zu freed=%d\n", (void *)current, current->size, current->in_use);
     current = current->next;
   }
 }
 
+// main/test scripts lol
 int main() {
   intializeHead();
   printf("Initial: ");
@@ -106,7 +113,8 @@ int main() {
   memFree(test_2);
   printf("test_3: \n");
   memFree(test_3);
-  char *test_5 = memAlloc(128);
+  printChunks();
+  char *test_5 = memAlloc(20);
   printf("test_1: \n");
   memFree(test_1);
   printChunks();
