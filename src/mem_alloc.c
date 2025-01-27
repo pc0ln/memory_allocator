@@ -1,19 +1,9 @@
-#include <stdio.h>
-#include <stdbool.h>
+#include "mem_alloc.h"
+#include <string.h>
 
-#define HEAP_CAP 64000032
-
-// Metadata for memory chunk
-typedef struct Chunk_Data{
-  size_t size;
-  bool in_use;
-  struct Chunk_Data* next;
-  struct Chunk_Data* prev;
-} Chunk_Data;
-
-// Initalization of "heap"
-unsigned char heap[HEAP_CAP] = { 0 };
-Chunk_Data *heap_head = NULL;
+Chunk_Data *head_head = NULL;
+unsigned char heap[HEAP_CAP] = {0};
+//memset(heap, 0, HEAP_CAP);
 
 //Creating metadata for initial "heap"
 void intializeHead() {
@@ -96,31 +86,4 @@ void printChunks () {
     printf("Chunk at:%p size=%zu freed=%d\n", (void *)current, current->size, current->in_use);
     current = current->next;
   }
-}
-
-// main/test scripts lol
-int main() {
-  intializeHead();
-  printf("Initial: ");
-  printChunks();
-  char *test_1 = memAlloc(32);
-  char *test_2 = memAlloc(32);
-  char *test_3 = memAlloc(32);
-  char *test_4 = memAlloc(32);
-  printf("\nallocated: \n");
-  printChunks();
-  printf("test_2: \n");
-  memFree(test_2);
-  printf("test_3: \n");
-  memFree(test_3);
-  printChunks();
-  char *test_5 = memAlloc(20);
-  printf("test_1: \n");
-  memFree(test_1);
-  printChunks();
-  printf("test_4: \n");
-  memFree(test_4);
-  memFree(test_5);
-  printChunks();
-  return 0;
 }
